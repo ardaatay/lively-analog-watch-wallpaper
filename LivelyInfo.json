@@ -1,0 +1,11 @@
+{
+  "AppVersion": "2.2.1.5",
+  "Title": "Analog Saat",
+  "Desc": "Siyah arkaplanli canli analog saat. Turkce tarih, konum bilgisi, CPU ve RAM gostergeleri.",
+  "Author": "Arda Atay",
+  "License": "MIT",
+  "Contact": "",
+  "Type": 1,
+  "Arguments": "--system-information",
+  "FileName": "index.html"
+}

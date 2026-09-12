@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Analog Saat</title>
+<style>
+  :root {
+    --bg: #000000;
+    --fg: #f5f5f5;
+    --muted: #9a9a9a;
+    --accent: #e5484d;
+    --ring: #1c1c1c;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Segoe UI", system-ui, -apple-system, Arial, sans-serif;
+  }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px 40px;
+  }
+  main {
+    width: min(94vw, 920px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(24px, 5vw, 72px);
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .clock-col {
+    width: min(88vw, 440px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+  .stats {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    align-items: center;
+  }
+  .gauge { text-align: center; }
+  .gosterge {
+    width: min(40vw, 180px);
+    aspect-ratio: 1 / 1;
+    display: block;
+  }
+  .gosterge-baslik {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    color: var(--fg);
+  }
+  .gosterge-alt {
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (max-width: 760px) {
+    .stats { flex-direction: row; gap: 20px; }
+  }
+  .clock-wrap {
+    position: relative;
+    width: min(84vw, 400px);
+    aspect-ratio: 1 / 1;
+  }
+  #saat {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 35%, #141414 0%, #050505 62%, #000 100%);
+    border: 1px solid #262626;
+    box-shadow: 0 0 0 8px #0a0a0a, 0 0 60px rgba(255,255,255,0.06);
+  }
+  .digital {
+    text-align: center;
+    line-height: 1.2;
+  }
+  .time {
+    font-size: clamp(2rem, 8vw, 3rem);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+  .date {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 1rem;
+    text-transform: capitalize;
+  }
+  .disk {
+    width: 100%;
+    border: 1px solid #232323;
+    border-radius: 12px;
+    background: #0a0a0a;
+    padding: 14px 16px;
+    font-size: 0.95rem;
+  }
+  .disk-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .disk-title strong {
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+  }
+  .disk-guncelleme {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .disk-sag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .disk-yenile {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #333;
+    background: #161616;
+    color: #fff;
+    border-radius: 999px;
+    padding: 5px;
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+  .disk-yenile svg { display: block; }
+  .disk-yenile:hover { background: #222; }
+  .disk-yenile:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+  .disk-satir { margin-top: 12px; }
+  .disk-ust {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.9rem;
+  }
+  .disk-harfi {
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .disk-yuzde {
+    font-variant-numeric: tabular-nums;
+    color: var(--fg);
+  }
+  .disk-bar {
+    margin-top: 6px;
+    height: 8px;
+    border-radius: 999px;
+    background: #232323;
+    overflow: hidden;
+  }
+  .disk-dolgu {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: #f5f5f5;
+  }
+  .disk-dolgu.dolu { background: var(--accent); }
+  .disk-alt {
+    margin-top: 6px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .disk-hata {
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="stage">
+  <div class="clock-col">
+  <div class="clock-wrap">
+    <canvas id="saat" width="800" height="800" role="img" aria-label="Analog saat"></canvas>
+  </div>
+
+  <div class="digital" aria-live="off">
+    <div class="time" id="dijital-saat">--:--:--</div>
+    <div class="date" id="tarih">--</div>
+  </div>
+
+  <section class="disk" aria-label="Disk kullanımı">
+    <div class="disk-title">
+      <strong>DİSK</strong>
+      <span class="disk-sag">
+        <span class="disk-guncelleme" id="disk-guncelleme"></span>
+        <button class="disk-yenile" id="disk-yenile" type="button" aria-label="Diski yenile" title="Yenile">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M13.5 8a5.5 5.5 0 1 1-1.61-3.89" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            <path d="M13.7 1.6v3h-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </span>
+    </div>
+    <div id="disk-satirlar">
+      <p class="disk-hata">Disk verisi bekleniyor…</p>
+    </div>
+  </section>
+  </div><!-- clock-col -->
+
+  <aside class="stats" aria-label="Sistem kullanımı">
+    <div class="gauge">
+      <canvas class="gosterge" id="cpu-gosterge" width="360" height="360" role="img" aria-label="CPU kullanımı"></canvas>
+      <div class="gosterge-baslik">CPU</div>
+      <div class="gosterge-alt" id="cpu-alt">Lively duvar kağıdında aktif olur</div>
+    </div>
+    <div class="gauge">
+      <canvas class="gosterge" id="ram-gosterge" width="360" height="360" role="img" aria-label="RAM kullanımı"></canvas>
+      <div class="gosterge-baslik">RAM</div>
+      <div class="gosterge-alt" id="ram-alt">Lively duvar kağıdında aktif olur</div>
+    </div>
+  </aside>
+  </div><!-- stage -->
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var canvas = document.getElementById("saat");
+  var ctx = canvas.getContext("2d");
+  var dijital = document.getElementById("dijital-saat");
+  var tarihEl = document.getElementById("tarih");
+
+  function ikiBasamak(n) {
+    return (n < 10 ? "0" : "") + n;
+  }
+
+  // ---- CPU / RAM göstergeleri (veri yalnızca Lively duvar kağıdında gelir) ----
+  var cpuCanvas = document.getElementById("cpu-gosterge");
+  var ramCanvas = document.getElementById("ram-gosterge");
+  var cpuAlt = document.getElementById("cpu-alt");
+  var ramAlt = document.getElementById("ram-alt");
+  var cpuHedef = -1, cpuGoster = -1, ramHedef = -1, ramGoster = -1;
+
+  function mbCevir(v) {
+    v = Number(v);
+    if (!isFinite(v)) return 0;
+    if (v > 1e9) return v / 1048576; // bayt -> MB
+    if (v > 1e6) return v / 1024;    // KB -> MB
+    return v;                        // MB varsayımı
+  }
+
+  function gostergeCiz(cv, deger, renk) {
+    var g = cv.getContext("2d");
+    var cx = 180, cy = 180, r = 138;
+    var bas = Math.PI * 0.75, tur = Math.PI * 1.5;
+    g.clearRect(0, 0, 360, 360);
+    g.lineCap = "round";
+    g.beginPath();
+    g.arc(cx, cy, r, bas, bas + tur);
+    g.strokeStyle = "#232323";
+    g.lineWidth = 26;
+    g.stroke();
+    if (deger >= 0) {
+      var oran = Math.max(0, Math.min(1, deger / 100));
+      g.beginPath();
+      g.arc(cx, cy, r, bas, bas + tur * oran);
+      g.strokeStyle = renk;
+      g.lineWidth = 26;
+      g.stroke();
+    }
+    g.fillStyle = "#f5f5f5";
+    g.textAlign = "center";
+    g.textBaseline = "middle";
+    g.font = "700 66px 'Segoe UI', system-ui, sans-serif";
+    g.fillText(deger >= 0 ? (Math.round(deger) + "%") : "—", cx, cy + 4);
+  }
+
+  function yumusat(hedef, goster) {
+    if (hedef < 0) return hedef;
+    if (goster < 0) return hedef;
+    var y = goster + (hedef - goster) * 0.08;
+    return Math.abs(hedef - y) < 0.05 ? hedef : y;
+  }
+
+  function gostergeleriGuncelle() {
+    cpuGoster = yumusat(cpuHedef, cpuGoster);
+    ramGoster = yumusat(ramHedef, ramGoster);
+    gostergeCiz(cpuCanvas, cpuGoster, "#e5484d");
+    gostergeCiz(ramCanvas, ramGoster, "#f5f5f5");
+  }
+
+  // Lively bu global fonksiyonu çağırır (LivelyInfo.json: --system-information)
+  window.livelySystemInformation = function (data) {
+    try {
+      var obj = JSON.parse(data);
+      if (obj && isFinite(obj.CurrentCpu)) {
+        cpuHedef = Math.max(0, Math.min(100, Number(obj.CurrentCpu)));
+        if (obj.NameCpu) {
+          cpuAlt.textContent = String(obj.NameCpu);
+          cpuAlt.title = String(obj.NameCpu);
+        }
+      }
+      if (obj && isFinite(obj.TotalRam) && Number(obj.TotalRam) > 0) {
+        var toplamMB = mbCevir(obj.TotalRam);
+        var bosMB = mbCevir(obj.CurrentRamAvail);
+        if (toplamMB > 0) {
+          ramHedef = Math.max(0, Math.min(100, (toplamMB - bosMB) / toplamMB * 100));
+          var kullGB = ((toplamMB - bosMB) / 1024).toFixed(1);
+          var topGB = (toplamMB / 1024).toFixed(1);
+          ramAlt.textContent = kullGB + " / " + topGB + " GB";
+        }
+      }
+    } catch (e) { /* bozuk veri gelirse yoksay */ }
+  };
+
+  function saatCiz(now) {
+    var W = canvas.width;
+    var H = canvas.height;
+    var cx = W / 2;
+    var cy = H / 2;
+    var R = W / 2 - 24;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Dış halka
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + 8, 0, Math.PI * 2);
+    ctx.strokeStyle = "#2b2b2b";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Dakika / saat çizgileri
+    for (var i = 0; i < 60; i++) {
+      var a = (i * Math.PI) / 30;
+      var saatCizgisi = i % 5 === 0;
+      var r1 = saatCizgisi ? R - 34 : R - 18;
+      var r2 = R - 6;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.sin(a) * r1, cy - Math.cos(a) * r1);
+      ctx.lineTo(cx + Math.sin(a) * r2, cy - Math.cos(a) * r2);
+      ctx.strokeStyle = saatCizgisi ? "#ffffff" : "#5c5c5c";
+      ctx.lineWidth = saatCizgisi ? 10 : 4;
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
+
+    // Sayılar
+    ctx.fillStyle = "#f5f5f5";
+    ctx.font = "600 72px 'Segoe UI', system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (var s = 1; s <= 12; s++) {
+      var sa = (s * Math.PI) / 6;
+      var sx = cx + Math.sin(sa) * (R - 92);
+      var sy = cy - Math.cos(sa) * (R - 92);
+      ctx.fillText(String(s), sx, sy + 2);
+    }
+
+    var ms = now.getMilliseconds();
+    var sn = now.getSeconds() + ms / 1000;
+    var dk = now.getMinutes() + sn / 60;
+    var saati = (now.getHours() % 12) + dk / 60;
+
+    function kol(a, uzunluk, genislik, renk) {
+      ctx.beginPath();
+      ctx.moveTo(cx - Math.sin(a) * 30, cy + Math.cos(a) * 30);
+      ctx.lineTo(cx + Math.sin(a) * uzunluk, cy - Math.cos(a) * uzunluk);
+      ctx.strokeStyle = renk;
+      ctx.lineWidth = genislik;
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
+
+    // Akrep, yelkovan, saniye
+    kol((saati * Math.PI) / 6, R - 170, 20, "#ffffff");
+    kol((dk * Math.PI) / 30, R - 110, 12, "#d8d8d8");
+    kol((sn * Math.PI) / 30, R - 70, 5, "#e5484d");
+
+    // Merkez
+    ctx.beginPath();
+    ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+    ctx.fillStyle = "#e5484d";
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+    ctx.fillStyle = "#000";
+    ctx.fill();
+
+    // Dijital saat + Türkçe tarih (her karede ucuzca güncellenir)
+    var t = ikiBasamak(now.getHours()) + ":" + ikiBasamak(now.getMinutes()) + ":" + ikiBasamak(now.getSeconds());
+    if (dijital.textContent !== t) dijital.textContent = t;
+
+    try {
+      var tarih = new Intl.DateTimeFormat("tr-TR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      }).format(now);
+      if (tarihEl.textContent !== tarih) tarihEl.textContent = tarih;
+    } catch (e) {
+      tarihEl.textContent = now.toLocaleDateString("tr-TR");
+    }
+  }
+
+  function dongu() {
+    saatCiz(new Date());
+    gostergeleriGuncelle();
+    requestAnimationFrame(dongu);
+  }
+  requestAnimationFrame(dongu);
+
+  // ---- Disk kullanımı (disk-yaz.ps1 betiği disk.json üretir) ----
+  var diskSatirlar = document.getElementById("disk-satirlar");
+  var diskGuncelleme = document.getElementById("disk-guncelleme");
+
+  function hepsiTemizle(el) {
+    while (el.firstChild) el.removeChild(el.firstChild);
+  }
+
+  function diskHata(mesaj) {
+    hepsiTemizle(diskSatirlar);
+    var p = document.createElement("p");
+    p.className = "disk-hata";
+    p.textContent = mesaj || "Disk verisi okunamadı.";
+    diskSatirlar.appendChild(p);
+  }
+
+  function gbYaz(v) {
+    return (Math.round(Number(v) * 10) / 10) + " GB";
+  }
+
+  function diskGoster(veri) {
+    var liste = veri && veri.diskler;
+    if (!liste || !liste.length) {
+      diskHata("Disk verisi boş geldi.");
+      return;
+    }
+    hepsiTemizle(diskSatirlar);
+    for (var i = 0; i < liste.length; i++) {
+      var d = liste[i];
+      var yuzde = Math.max(0, Math.min(100, Number(d.yuzde) || 0));
+
+      var satir = document.createElement("div");
+      satir.className = "disk-satir";
+
+      var ust = document.createElement("div");
+      ust.className = "disk-ust";
+      var harf = document.createElement("span");
+      harf.className = "disk-harfi";
+      harf.textContent = d.etiket ? (d.ad + ":  " + d.etiket) : (d.ad + ":");
+      var y = document.createElement("span");
+      y.className = "disk-yuzde";
+      y.textContent = "%" + (Math.round(yuzde * 10) / 10);
+      ust.appendChild(harf);
+      ust.appendChild(y);
+
+      var bar = document.createElement("div");
+      bar.className = "disk-bar";
+      bar.setAttribute("role", "img");
+      bar.setAttribute("aria-label", d.ad + " diski %" + Math.round(yuzde) + " dolu");
+      var dolgu = document.createElement("div");
+      dolgu.className = "disk-dolgu" + (yuzde >= 90 ? " dolu" : "");
+      dolgu.style.width = yuzde + "%";
+      bar.appendChild(dolgu);
+
+      var alt = document.createElement("div");
+      alt.className = "disk-alt";
+      alt.textContent = gbYaz(d.kullanilanGB) + " / " + gbYaz(d.toplamGB);
+
+      satir.appendChild(ust);
+      satir.appendChild(bar);
+      satir.appendChild(alt);
+      diskSatirlar.appendChild(satir);
+    }
+    if (veri.guncelleme) {
+      try {
+        var t = new Date(veri.guncelleme);
+        diskGuncelleme.textContent = "güncelleme: " +
+          ikiBasamak(t.getHours()) + ":" + ikiBasamak(t.getMinutes()) + ":" + ikiBasamak(t.getSeconds());
+      } catch (e) { diskGuncelleme.textContent = ""; }
+    }
+  }
+
+  function diskOku() {
+    fetch("disk.json?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(diskGoster)
+      .catch(function () {
+        diskHata("Disk verisi okunamadı (yardımcı betik çalışmıyor olabilir).");
+      });
+  }
+
+  diskOku();
+  setInterval(diskOku, 30000);
+
+  // Manuel tetikleme: kayıtlı analogsaat:// protokolü yardımcı betiği çalıştırır,
+  // birkaç saniye sonra dosya yeniden okunur.
+  var diskYenileBtn = document.getElementById("disk-yenile");
+  diskYenileBtn.addEventListener("click", function () {
+    diskGuncelleme.textContent = "yenileniyor…";
+    try {
+      var f = document.createElement("iframe");
+      f.style.display = "none";
+      f.src = "analogsaat://disk-yenile";
+      document.body.appendChild(f);
+      setTimeout(function () {
+        if (f.parentNode) f.parentNode.removeChild(f);
+      }, 5000);
+    } catch (e) { /* yoksay */ }
+    setTimeout(diskOku, 4000);
+  });
+})();
+</script>
+</body>
+</html>
