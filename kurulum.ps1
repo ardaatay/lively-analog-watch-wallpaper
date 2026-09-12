@@ -8,8 +8,9 @@ $ErrorActionPreference = "Stop"
 $kendiKlasoru = Split-Path -Parent $MyInvocation.MyCommand.Path
 $betik = Join-Path $kendiKlasoru "disk-yaz.ps1"
 
-# 1) Zamanlanmis gorev
-$a = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-WindowStyle Hidden -ExecutionPolicy Bypass -File `"$betik`""
+# 1) Zamanlanmis gorev (penceresiz calisir, siyah ekran titremez)
+$vbs = Join-Path $kendiKlasoru "disk-yaz-sessiz.vbs"
+$a = New-ScheduledTaskAction -Execute "wscript.exe" -Argument "//B //Nologo `"$vbs`""
 $t1 = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
 $t2 = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 2) -RepetitionDuration (New-TimeSpan -Days 3650)
 $s = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
